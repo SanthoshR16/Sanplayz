@@ -143,26 +143,38 @@ export function generateRecommendations(
     };
   }
 
-  // Count aggregates
+  // Count aggregates (accounting for green 0)
   let redCount = 0;
+  let blackCount = 0;
+  let greenCount = 0;
   let oddCount = 0;
+  let evenCount = 0;
+  let zeroCount = 0;
   for (const r of results) {
     if (r.color === 'red') redCount++;
+    else if (r.color === 'black') blackCount++;
+    else if (r.color === 'green' || r.number === 0) greenCount++;
+
     if (r.parity === 'odd') oddCount++;
+    else if (r.parity === 'even') evenCount++;
+    else if (r.parity === 'none' || r.number === 0) zeroCount++;
   }
-  const blackCount = total - redCount;
-  const evenCount = total - oddCount;
 
   // Recent 5-spin window
   const recent5 = results.slice(-5);
   let r5Red = 0;
+  let r5Black = 0;
+  let r5Green = 0;
   let r5Odd = 0;
+  let r5Even = 0;
   for (const r of recent5) {
     if (r.color === 'red') r5Red++;
+    else if (r.color === 'black') r5Black++;
+    else if (r.color === 'green' || r.number === 0) r5Green++;
+
     if (r.parity === 'odd') r5Odd++;
+    else if (r.parity === 'even') r5Even++;
   }
-  const r5Black = recent5.length - r5Red;
-  const r5Even = recent5.length - r5Odd;
 
   // Streaks
   const streaks = calculateStreaks(results);
@@ -171,9 +183,11 @@ export function generateRecommendations(
   const transitions = calculateTransitions(results);
   const { colorProbabilities, parityProbabilities } = getTransitionProbabilities(transitions);
 
-  // Bayesian updates
-  const bayesRed = calculateBayesianEstimate('Red', redCount, blackCount);
-  const bayesOdd = calculateBayesianEstimate('Odd', oddCount, evenCount);
+  // Bayesian updates (Red vs Black trials, Odd vs Even trials)
+  const colorTrials = redCount + blackCount;
+  const parityTrials = oddCount + evenCount;
+  const bayesRed = calculateBayesianEstimate('Red', redCount, colorTrials > 0 ? blackCount : 0);
+  const bayesOdd = calculateBayesianEstimate('Odd', oddCount, parityTrials > 0 ? evenCount : 0);
 
   // -------------------------------------------------------------
   // COLOR ANALYSIS

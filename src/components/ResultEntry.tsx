@@ -9,7 +9,7 @@ import {
   Check,
   X,
 } from 'lucide-react';
-import { ALL_ROULETTE_NUMBERS, classifyNumber, validateRouletteInput } from '../math/mapping';
+import { ROULETTE_1_36_NUMBERS, classifyNumber, validateRouletteInput } from '../math/mapping';
 import type { Classification } from '../types/roulette';
 
 interface ResultEntryProps {
@@ -99,10 +99,10 @@ export const ResultEntry: React.FC<ResultEntryProps> = ({
         <div>
           <h2 className="panel-title">
             <PlusCircle size={18} color="#f43f5e" />
-            <span>Enter Roulette Outcome (1–36)</span>
+            <span>Enter Roulette Outcome (0–36)</span>
           </h2>
           <p className="panel-subtitle">
-            Enter the drawn number only. Color (Red/Black) and parity (Odd/Even) are calculated automatically.
+            Enter the drawn number (0–36). 0 is Green Zero (non-1–18 & non-19–36). Color and parity are calculated automatically.
           </p>
         </div>
 
@@ -110,10 +110,10 @@ export const ResultEntry: React.FC<ResultEntryProps> = ({
           onClick={() => setShowGrid(!showGrid)}
           className="btn-secondary"
           style={{ fontSize: '0.8rem', padding: '0.35rem 0.65rem' }}
-          title="Toggle 1–36 Quick Selection Grid"
+          title="Toggle 0–36 Quick Selection Grid"
         >
           <Grid size={14} />
-          <span>{showGrid ? 'Hide 1–36 Grid' : 'Show 1–36 Grid'}</span>
+          <span>{showGrid ? 'Hide 0–36 Grid' : 'Show 0–36 Grid'}</span>
         </button>
       </div>
 
@@ -137,18 +137,18 @@ export const ResultEntry: React.FC<ResultEntryProps> = ({
                 marginBottom: '0.4rem',
               }}
             >
-              Roulette Number (Integer 1–36)
+              Roulette Number (Integer 0–36)
             </label>
             <div style={{ position: 'relative' }}>
               <input
                 id={inputId}
                 type="number"
-                min="1"
+                min="0"
                 max="36"
                 step="1"
                 value={inputValue}
                 onChange={handleInputChange}
-                placeholder="e.g. 23"
+                placeholder="e.g. 0, 7, 23"
                 className="input-field font-mono"
                 style={{
                   fontSize: '1.3rem',
@@ -298,12 +298,15 @@ export const ResultEntry: React.FC<ResultEntryProps> = ({
                 Preview classification for <strong>#{preview.number}</strong>:
               </span>
             </div>
-            <div style={{ display: 'flex', gap: '0.4rem' }}>
-              <span className={`badge ${preview.color === 'red' ? 'badge-red' : 'badge-black'}`}>
+            <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
+              <span className={`badge ${preview.color === 'green' ? 'badge-green' : preview.color === 'red' ? 'badge-red' : 'badge-black'}`}>
                 {preview.color.toUpperCase()}
               </span>
-              <span className={`badge ${preview.parity === 'odd' ? 'badge-odd' : 'badge-even'}`}>
-                {preview.parity.toUpperCase()}
+              <span className={`badge ${preview.parity === 'none' ? 'badge-zero' : preview.parity === 'odd' ? 'badge-odd' : 'badge-even'}`}>
+                {preview.parity === 'none' ? 'ZERO / NONE' : preview.parity.toUpperCase()}
+              </span>
+              <span className="badge badge-odd">
+                {preview.half === 'none' ? 'NEITHER 1–18 NOR 19–36' : preview.half === 'low' ? '1–18 (LOW)' : '19–36 (HIGH)'}
               </span>
               <span style={{
                 fontSize: '0.75rem',
@@ -337,7 +340,7 @@ export const ResultEntry: React.FC<ResultEntryProps> = ({
         )}
       </form>
 
-      {/* 1–36 Quick Selection Grid */}
+      {/* 0–36 Quick Selection Grid */}
       {showGrid && (
         <div style={{
           borderTop: '1px solid var(--border-subtle)',
@@ -350,11 +353,52 @@ export const ResultEntry: React.FC<ResultEntryProps> = ({
             marginBottom: '0.6rem',
           }}>
             <span style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-secondary)' }}>
-              1–36 Quick Selection Grid (Grouped by Dozens)
+              0–36 Quick Selection Grid (European Roulette Wheel)
             </span>
             <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
               Click any number to record instantly
             </span>
+          </div>
+
+          {/* Green Zero 0 Top Banner Button */}
+          <div style={{ marginBottom: '0.65rem' }}>
+            <button
+              key="num-chip-0"
+              type="button"
+              className="grid-chip-btn"
+              onClick={() => handleGridClick(0)}
+              disabled={isSubmitting}
+              aria-label="#0 green zero"
+              style={{
+                width: '100%',
+                minHeight: '46px',
+                background: 'linear-gradient(135deg, rgba(5, 150, 105, 0.45) 0%, rgba(4, 120, 87, 0.65) 100%)',
+                border: '1px solid rgba(16, 185, 129, 0.6)',
+                borderRadius: 'var(--radius-sm)',
+                padding: '0.5rem 1rem',
+                color: '#fff',
+                fontWeight: 700,
+                fontSize: '0.95rem',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '0.75rem',
+                boxShadow: '0 2px 10px rgba(16, 185, 129, 0.25)',
+              }}
+            >
+              <span style={{ fontSize: '1.2rem', fontWeight: 800, color: '#34d399', fontFamily: 'var(--font-mono)' }}>#0</span>
+              <span style={{ letterSpacing: '0.04em' }}>GREEN ZERO</span>
+              <span style={{
+                fontSize: '0.72rem',
+                color: '#a7f3d0',
+                background: 'rgba(6, 78, 59, 0.6)',
+                padding: '0.15rem 0.5rem',
+                borderRadius: 4,
+              }}>
+                Non-1–18 & Non-19–36 (House Edge)
+              </span>
+            </button>
           </div>
 
           <div style={{
@@ -362,7 +406,7 @@ export const ResultEntry: React.FC<ResultEntryProps> = ({
             gridTemplateColumns: 'repeat(auto-fill, minmax(46px, 1fr))',
             gap: '0.4rem',
           }}>
-            {ALL_ROULETTE_NUMBERS.map((num) => {
+            {ROULETTE_1_36_NUMBERS.map((num) => {
               const c = classifyNumber(num);
               const isRed = c.color === 'red';
               return (

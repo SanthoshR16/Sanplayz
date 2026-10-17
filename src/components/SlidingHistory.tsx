@@ -95,6 +95,7 @@ export const SlidingHistory: React.FC<SlidingHistoryProps> = ({
             );
           }
 
+          const isGreen = item.color === 'green' || item.number === 0;
           const isRed = item.color === 'red';
           const isOdd = item.parity === 'odd';
 
@@ -104,7 +105,7 @@ export const SlidingHistory: React.FC<SlidingHistoryProps> = ({
               className={`history-slot filled ${item.color}`}
               id={`history-slot-${index}`}
               style={{
-                borderTop: isRed ? '3px solid #f43f5e' : '3px solid #64748b',
+                borderTop: isGreen ? '3px solid #10b981' : isRed ? '3px solid #f43f5e' : '3px solid #64748b',
               }}
             >
               <div style={{
@@ -119,7 +120,7 @@ export const SlidingHistory: React.FC<SlidingHistoryProps> = ({
                   fontSize: '0.65rem',
                   fontWeight: 700,
                   textTransform: 'uppercase',
-                  color: isRed ? '#fda4af' : '#cbd5e1',
+                  color: isGreen ? '#a7f3d0' : isRed ? '#fda4af' : '#cbd5e1',
                 }}>
                   {slotLabel}
                 </span>
@@ -134,7 +135,11 @@ export const SlidingHistory: React.FC<SlidingHistoryProps> = ({
                 fontWeight: 800,
                 lineHeight: 1.1,
                 color: '#fff',
-                textShadow: isRed ? '0 0 16px rgba(225, 29, 72, 0.6)' : '0 0 14px rgba(0,0,0,0.8)',
+                textShadow: isGreen
+                  ? '0 0 16px rgba(16, 185, 129, 0.7)'
+                  : isRed
+                    ? '0 0 16px rgba(225, 29, 72, 0.6)'
+                    : '0 0 14px rgba(0,0,0,0.8)',
                 fontFamily: 'var(--font-mono)',
               }}>
                 {item.number}
@@ -149,11 +154,11 @@ export const SlidingHistory: React.FC<SlidingHistoryProps> = ({
                 flexWrap: 'wrap',
                 justifyContent: 'center',
               }}>
-                <span className={`badge ${isRed ? 'badge-red' : 'badge-black'}`}>
+                <span className={`badge ${isGreen ? 'badge-green' : isRed ? 'badge-red' : 'badge-black'}`}>
                   {item.color.toUpperCase()}
                 </span>
-                <span className={`badge ${isOdd ? 'badge-odd' : 'badge-even'}`}>
-                  {item.parity.toUpperCase()}
+                <span className={`badge ${isGreen ? 'badge-zero' : isOdd ? 'badge-odd' : 'badge-even'}`}>
+                  {item.parity === 'none' ? 'ZERO' : item.parity.toUpperCase()}
                 </span>
               </div>
             </div>

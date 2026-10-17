@@ -19,8 +19,12 @@ describe('Test 20: UI Workflow & Responsiveness', () => {
     expect(screen.getByText('5-Slot Sliding History Window')).toBeInTheDocument();
 
     // Check input box is present
-    const input = screen.getByPlaceholderText('e.g. 23');
+    const input = screen.getByPlaceholderText('e.g. 0, 7, 23');
     expect(input).toBeInTheDocument();
+
+    // Check Green Zero button is present
+    const chip0 = screen.getByRole('button', { name: /#0 green zero/i });
+    expect(chip0).toBeInTheDocument();
 
     // Check 1–36 quick grid button for number 3
     const chip3 = screen.getByRole('button', { name: /#3 red odd/i });
@@ -54,7 +58,7 @@ describe('Test 20: UI Workflow & Responsiveness', () => {
     render(<App />);
 
     expect(await screen.findByText('Adaptive Roulette Mathematics')).toBeInTheDocument();
-    expect(screen.getByText('Enter Roulette Outcome (1–36)')).toBeInTheDocument();
+    expect(screen.getByText('Enter Roulette Outcome (0–36)')).toBeInTheDocument();
   });
 
   it('Maintains usability at desktop viewport widths (1440px)', async () => {

@@ -34,14 +34,18 @@ export function calculateTransitions(results: RouletteResult[]): TransitionStats
     const parityKey = `${prev.parity}->${curr.parity}` as keyof TransitionStats['parityTransitions'];
     if (stats.parityTransitions[parityKey] !== undefined) {
       stats.parityTransitions[parityKey]++;
-      stats.parityTotals[prev.parity]++;
+      if (prev.parity === 'odd' || prev.parity === 'even') {
+        stats.parityTotals[prev.parity]++;
+      }
     }
 
     // Color transition
     const colorKey = `${prev.color}->${curr.color}` as keyof TransitionStats['colorTransitions'];
     if (stats.colorTransitions[colorKey] !== undefined) {
       stats.colorTransitions[colorKey]++;
-      stats.colorTotals[prev.color]++;
+      if (prev.color === 'red' || prev.color === 'black') {
+        stats.colorTotals[prev.color]++;
+      }
     }
   }
 

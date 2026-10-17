@@ -218,15 +218,25 @@ export function App() {
   const counts = useMemo(() => {
     let redCount = 0;
     let blackCount = 0;
+    let greenCount = 0;
     let oddCount = 0;
     let evenCount = 0;
+    let zeroCount = 0;
+    let lowCount = 0;
+    let highCount = 0;
     for (const r of results) {
       if (r.color === 'red') redCount++;
-      else blackCount++;
+      else if (r.color === 'black') blackCount++;
+      else if (r.color === 'green' || r.number === 0) greenCount++;
+
       if (r.parity === 'odd') oddCount++;
-      else evenCount++;
+      else if (r.parity === 'even') evenCount++;
+      else if (r.parity === 'none' || r.number === 0) zeroCount++;
+
+      if (r.number >= 1 && r.number <= 18) lowCount++;
+      else if (r.number >= 19 && r.number <= 36) highCount++;
     }
-    return { redCount, blackCount, oddCount, evenCount };
+    return { redCount, blackCount, greenCount, oddCount, evenCount, zeroCount, lowCount, highCount };
   }, [results]);
 
   const redBayes = useMemo(() => {

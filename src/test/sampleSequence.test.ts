@@ -6,44 +6,59 @@ describe('Test 4: Specific Sample Sequence and Validation Examples', () => {
     const seq = [3, 8, 6, 23, 36];
     const classifications = seq.map((n) => classifyNumber(n));
 
-    // 3 → Odd, Red
+    // 3 → Odd, Red, Low
     expect(classifications[0]).toEqual({
       number: 3,
       color: 'red',
       parity: 'odd',
+      half: 'low',
       joint: 'red-odd',
     });
 
-    // 8 → Even, Black
+    // 8 → Even, Black, Low
     expect(classifications[1]).toEqual({
       number: 8,
       color: 'black',
       parity: 'even',
+      half: 'low',
       joint: 'black-even',
     });
 
-    // 6 → Even, Black
+    // 6 → Even, Black, Low
     expect(classifications[2]).toEqual({
       number: 6,
       color: 'black',
       parity: 'even',
+      half: 'low',
       joint: 'black-even',
     });
 
-    // 23 → Odd, Red
+    // 23 → Odd, Red, High
     expect(classifications[3]).toEqual({
       number: 23,
       color: 'red',
       parity: 'odd',
+      half: 'high',
       joint: 'red-odd',
     });
 
-    // 36 → Even, Red
+    // 36 → Even, Red, High
     expect(classifications[4]).toEqual({
       number: 36,
       color: 'red',
       parity: 'even',
+      half: 'high',
       joint: 'red-even',
+    });
+  });
+
+  it('Matches Green Zero classification', () => {
+    expect(classifyNumber(0)).toEqual({
+      number: 0,
+      color: 'green',
+      parity: 'none',
+      half: 'none',
+      joint: 'green-zero',
     });
   });
 

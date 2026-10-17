@@ -135,6 +135,7 @@ export const HistoryTable: React.FC<HistoryTableProps> = ({
               {/* Show reverse chronological in table (newest at top) */}
               {[...filtered].reverse().map((r, revIdx) => {
                 const originalIndex = results.indexOf(r) + 1;
+                const isGreen = r.color === 'green' || r.number === 0;
                 const isRed = r.color === 'red';
                 const isOdd = r.parity === 'odd';
                 const formattedDate = new Date(r.timestamp).toLocaleTimeString([], {
@@ -156,17 +157,17 @@ export const HistoryTable: React.FC<HistoryTableProps> = ({
                     <td style={{ padding: '0.6rem 0.75rem', color: 'var(--text-muted)' }}>
                       #{originalIndex}
                     </td>
-                    <td style={{ padding: '0.6rem 0.75rem', fontWeight: 800, fontSize: '1.05rem', color: '#fff' }} className="font-mono">
+                    <td style={{ padding: '0.6rem 0.75rem', fontWeight: 800, fontSize: '1.05rem', color: isGreen ? '#34d399' : '#fff' }} className="font-mono">
                       {r.number}
                     </td>
                     <td style={{ padding: '0.6rem 0.75rem' }}>
-                      <span className={`badge ${isRed ? 'badge-red' : 'badge-black'}`}>
+                      <span className={`badge ${isGreen ? 'badge-green' : isRed ? 'badge-red' : 'badge-black'}`}>
                         {r.color.toUpperCase()}
                       </span>
                     </td>
                     <td style={{ padding: '0.6rem 0.75rem' }}>
-                      <span className={`badge ${isOdd ? 'badge-odd' : 'badge-even'}`}>
-                        {r.parity.toUpperCase()}
+                      <span className={`badge ${isGreen ? 'badge-zero' : isOdd ? 'badge-odd' : 'badge-even'}`}>
+                        {r.parity === 'none' ? 'ZERO' : r.parity.toUpperCase()}
                       </span>
                     </td>
                     <td style={{ padding: '0.6rem 0.75rem', color: 'var(--text-secondary)' }}>

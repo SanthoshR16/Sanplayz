@@ -209,8 +209,22 @@ export const MappingModal: React.FC<MappingModalProps> = ({ isOpen, onClose }) =
           marginBottom: '1.25rem',
           lineHeight: 1.45,
         }}>
-          <strong>CRITICAL ARCHITECTURE NOTICE:</strong> This application executes an exact custom 1–36 mapping rather than conventional European or American roulette.
-          The 36 outcomes are strictly allocated across three dozens.
+          <strong>CRITICAL ARCHITECTURE NOTICE:</strong> This application executes the 37-outcome European roulette space (0–36) with an exact custom 1–36 Red/Black mapping and a dedicated single <strong>Green Zero (0)</strong> pocket.
+        </div>
+
+        {/* Green Zero Section */}
+        <div style={{ background: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.3)', padding: '0.75rem', borderRadius: 'var(--radius-sm)', marginBottom: '1rem' }}>
+          <div style={{ fontWeight: 700, fontSize: '0.85rem', color: '#10b981', marginBottom: '0.4rem' }}>
+            Single Pocket 0: Green Zero (European 37-Outcome Sample Space)
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+            <span className="badge badge-green" style={{ fontSize: '0.85rem', minWidth: 64, justifyContent: 'center' }}>
+              #0 ZERO
+            </span>
+            <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+              Color: <strong>Green</strong> &bull; Parity: <strong>None (neither Odd nor Even)</strong> &bull; Half: <strong>None (neither 1–18 nor 19–36)</strong> &bull; House Edge: <strong>1/37 &asymp; 2.70%</strong>
+            </span>
+          </div>
         </div>
 
         {/* 3 Dozen Sections */}

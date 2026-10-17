@@ -24,9 +24,9 @@ export function generatePreResultForecast(
 
   for (const r of history) {
     if (r.color === 'red') redCount++;
-    else blackCount++;
+    else if (r.color === 'black') blackCount++;
     if (r.parity === 'odd') oddCount++;
-    else evenCount++;
+    else if (r.parity === 'even') evenCount++;
   }
 
   const redBayes = calculateBayesianEstimate('Red', redCount, blackCount, priorAlpha, priorBeta);

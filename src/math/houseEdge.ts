@@ -22,44 +22,56 @@ export function calculateHouseEdge(input: HouseEdgeInput): HouseEdgeResult {
   switch (input.betCategory) {
     case 'red':
       pWin = theo.pRed;
-      categoryLabel = `Red (${theo.redCount}/36 outcomes)`;
+      categoryLabel = `Red (${theo.redCount}/${theo.totalOutcomes} outcomes)`;
       break;
     case 'black':
       pWin = theo.pBlack;
-      categoryLabel = `Black (${theo.blackCount}/36 outcomes)`;
+      categoryLabel = `Black (${theo.blackCount}/${theo.totalOutcomes} outcomes)`;
       break;
     case 'odd':
       pWin = theo.pOdd;
-      categoryLabel = `Odd (${theo.oddCount}/36 outcomes)`;
+      categoryLabel = `Odd (${theo.oddCount}/${theo.totalOutcomes} outcomes)`;
       break;
     case 'even':
       pWin = theo.pEven;
-      categoryLabel = `Even (${theo.evenCount}/36 outcomes)`;
+      categoryLabel = `Even (${theo.evenCount}/${theo.totalOutcomes} outcomes)`;
+      break;
+    case 'low':
+      pWin = theo.pLow;
+      categoryLabel = `Low 1–18 (${theo.lowCount}/${theo.totalOutcomes} outcomes)`;
+      break;
+    case 'high':
+      pWin = theo.pHigh;
+      categoryLabel = `High 19–36 (${theo.highCount}/${theo.totalOutcomes} outcomes)`;
+      break;
+    case 'zero':
+      pWin = theo.pZero;
+      categoryLabel = `Green Zero 0 (${theo.zeroCount}/${theo.totalOutcomes} outcomes)`;
       break;
     case 'single':
       pWin = 1 / theo.totalOutcomes;
-      categoryLabel = `Single Number (1/36 outcome)`;
+      categoryLabel = `Single Number (1/${theo.totalOutcomes} outcome)`;
       break;
     case 'joint_ro':
       pWin = theo.pJoint['red-odd'];
-      categoryLabel = `Red & Odd (${theo.jointCounts['red-odd']}/36 outcomes)`;
+      categoryLabel = `Red & Odd (${theo.jointCounts['red-odd']}/${theo.totalOutcomes} outcomes)`;
       break;
     case 'joint_re':
       pWin = theo.pJoint['red-even'];
-      categoryLabel = `Red & Even (${theo.jointCounts['red-even']}/36 outcomes)`;
+      categoryLabel = `Red & Even (${theo.jointCounts['red-even']}/${theo.totalOutcomes} outcomes)`;
       break;
     case 'joint_bo':
       pWin = theo.pJoint['black-odd'];
-      categoryLabel = `Black & Odd (${theo.jointCounts['black-odd']}/36 outcomes)`;
+      categoryLabel = `Black & Odd (${theo.jointCounts['black-odd']}/${theo.totalOutcomes} outcomes)`;
       break;
     case 'joint_be':
       pWin = theo.pJoint['black-even'];
-      categoryLabel = `Black & Even (${theo.jointCounts['black-even']}/36 outcomes)`;
+      categoryLabel = `Black & Even (${theo.jointCounts['black-even']}/${theo.totalOutcomes} outcomes)`;
       break;
     case 'custom': {
-      const k = Math.min(36, Math.max(1, input.customWinCount || 1));
+      const k = Math.min(theo.totalOutcomes, Math.max(1, input.customWinCount || 1));
       pWin = k / theo.totalOutcomes;
-      categoryLabel = `Custom Bet (${k}/36 outcomes)`;
+      categoryLabel = `Custom Bet (${k}/${theo.totalOutcomes} outcomes)`;
       break;
     }
   }
@@ -85,8 +97,9 @@ export function calculateHouseEdge(input: HouseEdgeInput): HouseEdgeResult {
   const formula = `EV = S * [p * b - (1 - p)] - fees; House Edge H = -EV / S`;
 
   const assumptions = [
-    `Wheel contains 36 discrete, uniformly probable outcomes (1–36).`,
+    `Wheel contains ${theo.totalOutcomes} discrete, uniformly probable outcomes (0–36 including Green Zero).`,
     `Theoretical probability for ${categoryLabel} is exactly ${pWin.toFixed(4)} (${(pWin * 100).toFixed(2)}%).`,
+    `On standard 1:1 bets (Red/Black, Odd/Even, Low/High), the 2.70% house edge arises from the single Green Zero (0).`,
     `Player wagers stake S = $${S.toFixed(2)} with net winning payout b = ${b.toFixed(4)} : 1.`,
     fees > 0 ? `Deductions/Fees applied: $${fees.toFixed(2)} per wager.` : 'No additional fees or table rake applied.',
     `House edge is strictly theoretical and derived from mathematical expectations, not short-term observed spins.`,

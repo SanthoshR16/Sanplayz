@@ -8,11 +8,12 @@ export function calculateStreaks(results: RouletteResult[]): StreakInfo {
   if (results.length === 0) {
     return {
       currentParityStreak: { parity: null, length: 0 },
-      currentParityMax: { odd: 0, even: 0 },
+      currentParityMax: { odd: 0, even: 0, none: 0 },
       parityDistribution: {},
       currentColorStreak: { color: null, length: 0 },
-      currentColorMax: { red: 0, black: 0 },
+      currentColorMax: { red: 0, black: 0, green: 0 },
       colorDistribution: {},
+      spinsSinceZero: null,
     };
   }
 
@@ -37,14 +38,25 @@ export function calculateStreaks(results: RouletteResult[]): StreakInfo {
     }
   }
 
+  // Calculate spins elapsed since the last 0 (Green) occurred
+  let spinsSinceZero: number | null = null;
+  for (let i = results.length - 1; i >= 0; i--) {
+    if (results[i].number === 0 || results[i].color === 'green') {
+      spinsSinceZero = results.length - 1 - i;
+      break;
+    }
+  }
+
   // Full history analysis for max streaks and frequency of lengths
   const parityDistribution: Record<string, number> = {};
   const colorDistribution: Record<string, number> = {};
 
   let maxOdd = 0;
   let maxEven = 0;
+  let maxNone = 0;
   let maxRed = 0;
   let maxBlack = 0;
+  let maxGreen = 0;
 
   // Parity pass
   let activeParity: RouletteParity | null = null;
@@ -60,6 +72,7 @@ export function calculateStreaks(results: RouletteResult[]): StreakInfo {
         parityDistribution[key] = (parityDistribution[key] || 0) + 1;
         if (activeParity === 'odd' && activeParityCount > maxOdd) maxOdd = activeParityCount;
         if (activeParity === 'even' && activeParityCount > maxEven) maxEven = activeParityCount;
+        if (activeParity === 'none' && activeParityCount > maxNone) maxNone = activeParityCount;
       }
       activeParity = p;
       activeParityCount = 1;
@@ -70,6 +83,7 @@ export function calculateStreaks(results: RouletteResult[]): StreakInfo {
     parityDistribution[key] = (parityDistribution[key] || 0) + 1;
     if (activeParity === 'odd' && activeParityCount > maxOdd) maxOdd = activeParityCount;
     if (activeParity === 'even' && activeParityCount > maxEven) maxEven = activeParityCount;
+    if (activeParity === 'none' && activeParityCount > maxNone) maxNone = activeParityCount;
   }
 
   // Color pass
@@ -86,6 +100,7 @@ export function calculateStreaks(results: RouletteResult[]): StreakInfo {
         colorDistribution[key] = (colorDistribution[key] || 0) + 1;
         if (activeColor === 'red' && activeColorCount > maxRed) maxRed = activeColorCount;
         if (activeColor === 'black' && activeColorCount > maxBlack) maxBlack = activeColorCount;
+        if (activeColor === 'green' && activeColorCount > maxGreen) maxGreen = activeColorCount;
       }
       activeColor = c;
       activeColorCount = 1;
@@ -96,6 +111,7 @@ export function calculateStreaks(results: RouletteResult[]): StreakInfo {
     colorDistribution[key] = (colorDistribution[key] || 0) + 1;
     if (activeColor === 'red' && activeColorCount > maxRed) maxRed = activeColorCount;
     if (activeColor === 'black' && activeColorCount > maxBlack) maxBlack = activeColorCount;
+    if (activeColor === 'green' && activeColorCount > maxGreen) maxGreen = activeColorCount;
   }
 
   return {
@@ -106,6 +122,7 @@ export function calculateStreaks(results: RouletteResult[]): StreakInfo {
     currentParityMax: {
       odd: maxOdd,
       even: maxEven,
+      none: maxNone,
     },
     parityDistribution,
     currentColorStreak: {
@@ -115,7 +132,9 @@ export function calculateStreaks(results: RouletteResult[]): StreakInfo {
     currentColorMax: {
       red: maxRed,
       black: maxBlack,
+      green: maxGreen,
     },
     colorDistribution,
+    spinsSinceZero,
   };
 }

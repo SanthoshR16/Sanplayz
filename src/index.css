@@ -151,6 +151,12 @@ body {
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
 }
 
+.history-slot.filled.green {
+  background: linear-gradient(135deg, rgba(5, 150, 105, 0.35) 0%, rgba(4, 120, 87, 0.5) 100%);
+  border-color: rgba(16, 185, 129, 0.6);
+  box-shadow: 0 4px 16px rgba(16, 185, 129, 0.25);
+}
+
 .history-slot:hover {
   transform: translateY(-2px);
 }
@@ -276,6 +282,18 @@ body {
   background: rgba(245, 158, 11, 0.15);
   color: #fcd34d;
   border: 1px solid rgba(245, 158, 11, 0.35);
+}
+
+.badge-green {
+  background: rgba(16, 185, 129, 0.2);
+  color: #6ee7b7;
+  border: 1px solid rgba(16, 185, 129, 0.45);
+}
+
+.badge-zero {
+  background: rgba(5, 150, 105, 0.3);
+  color: #a7f3d0;
+  border: 1px solid rgba(16, 185, 129, 0.6);
 }
 
 /* Modal overlay */
