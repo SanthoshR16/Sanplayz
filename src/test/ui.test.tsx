@@ -10,7 +10,7 @@ describe('Test 20: UI Workflow & Responsiveness', () => {
   });
 
   it('Requirement 20: UI renders all core sections and works interactively', async () => {
-    render(<App />);
+    render(<App defaultMode="roulette" />);
 
     // Check title is rendered
     expect(await screen.findByText('Adaptive Roulette Mathematics')).toBeInTheDocument();
@@ -55,7 +55,7 @@ describe('Test 20: UI Workflow & Responsiveness', () => {
     window.innerHeight = 667;
     window.dispatchEvent(new Event('resize'));
 
-    render(<App />);
+    render(<App defaultMode="roulette" />);
 
     expect(await screen.findByText('Adaptive Roulette Mathematics')).toBeInTheDocument();
     expect(screen.getByText('Enter Roulette Outcome (0–36)')).toBeInTheDocument();
@@ -66,7 +66,7 @@ describe('Test 20: UI Workflow & Responsiveness', () => {
     window.innerHeight = 900;
     window.dispatchEvent(new Event('resize'));
 
-    render(<App />);
+    render(<App defaultMode="roulette" />);
 
     expect(await screen.findByText('Adaptive Roulette Mathematics')).toBeInTheDocument();
     expect(screen.getByText('Next Spin Recommendation & Signals')).toBeInTheDocument();

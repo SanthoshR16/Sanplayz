@@ -50,9 +50,20 @@ import { evaluatePredictions } from './math/adaptive';
 import { generateRecommendations } from './math/recommendations';
 import { calculateDynamicWager, loadBankrollFromStorage } from './math/bankrollStorage';
 import { BarChart3, ChevronDown, ChevronUp, Cpu, History, Sparkles, Zap } from 'lucide-react';
+import { MinesAnalyzer } from './components/MinesAnalyzer';
 import type { PredictionRecord, RouletteResult, Session, UserSettings } from './types/roulette';
 
-export function App() {
+interface AppProps {
+  defaultMode?: 'mines' | 'roulette';
+}
+
+export function App({ defaultMode = 'mines' }: AppProps = {}) {
+  const [appMode, setAppMode] = useState<'mines' | 'roulette'>(() => {
+    if (typeof window !== 'undefined' && window.location.hash === '#roulette') {
+      return 'roulette';
+    }
+    return defaultMode;
+  });
   const [results, setResults] = useState<RouletteResult[]>([]);
   const [allHistoricalResults, setAllHistoricalResults] = useState<RouletteResult[]>([]);
   const [predictions, setPredictions] = useState<PredictionRecord[]>([]);
@@ -345,30 +356,109 @@ export function App() {
   }
 
   return (
-    <div className={`mobile-view-${mobileTab} ${settings.reducedMotion ? 'reduced-motion' : ''}`} style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-      {/* Header */}
-      <Header
-        session={session}
-        totalResults={totalResults}
-        settings={settings}
-        onOpenSettings={() => setIsSettingsOpen(true)}
-        onOpenExportImport={() => setIsExportImportOpen(true)}
-        onOpenClearConfirm={() => setIsClearConfirmOpen(true)}
-        onOpenMappingModal={() => setIsMappingOpen(true)}
-        onOpenHelpModal={() => setIsHelpOpen(true)}
-      />
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+      {/* Global Application Switcher Navigation Bar */}
+      <nav
+        aria-label="Application Selector"
+        style={{
+          background: 'rgba(6, 8, 14, 0.95)',
+          borderBottom: '1px solid var(--border-subtle)',
+          padding: '0.45rem 1.25rem',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          gap: '0.75rem',
+          position: 'sticky',
+          top: 0,
+          zIndex: 200,
+          backdropFilter: 'blur(12px)',
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+          <button
+            type="button"
+            onClick={() => setAppMode('mines')}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.4rem',
+              padding: '0.35rem 0.85rem',
+              borderRadius: 'var(--radius-md)',
+              background:
+                appMode === 'mines'
+                  ? 'linear-gradient(135deg, #e11d48 0%, #4f46e5 100%)'
+                  : 'rgba(255, 255, 255, 0.05)',
+              border: appMode === 'mines' ? '1px solid #e11d48' : '1px solid var(--border-subtle)',
+              color: '#fff',
+              fontSize: '0.82rem',
+              fontWeight: 700,
+              cursor: 'pointer',
+              boxShadow: appMode === 'mines' ? '0 2px 10px rgba(225, 29, 72, 0.35)' : 'none',
+            }}
+          >
+            <span>💣 Mines 5×5 AI Analyzer</span>
+          </button>
 
-      {/* Main Content Area */}
-      <main style={{
-        flex: 1,
-        maxWidth: 1400,
-        width: '100%',
-        margin: '0 auto',
-        padding: '1.5rem 1.25rem 3rem 1.25rem',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '1.5rem',
-      }}>
+          <button
+            type="button"
+            onClick={() => setAppMode('roulette')}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.4rem',
+              padding: '0.35rem 0.85rem',
+              borderRadius: 'var(--radius-md)',
+              background:
+                appMode === 'roulette'
+                  ? 'linear-gradient(135deg, #6366f1 0%, #06b6d4 100%)'
+                  : 'rgba(255, 255, 255, 0.05)',
+              border: appMode === 'roulette' ? '1px solid #6366f1' : '1px solid var(--border-subtle)',
+              color: '#fff',
+              fontSize: '0.82rem',
+              fontWeight: 700,
+              cursor: 'pointer',
+              boxShadow: appMode === 'roulette' ? '0 2px 10px rgba(99, 102, 241, 0.35)' : 'none',
+            }}
+          >
+            <span>🎡 Adaptive Roulette Mathematics</span>
+          </button>
+        </div>
+
+        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+          Active Mode: <strong style={{ color: '#fff' }}>{appMode === 'mines' ? 'Mines 5×5' : 'Roulette'}</strong>
+        </div>
+      </nav>
+
+      {appMode === 'mines' ? (
+        <main style={{ flex: 1, padding: '0.5rem 0 3rem 0' }}>
+          <MinesAnalyzer />
+        </main>
+      ) : (
+        <div className={`mobile-view-${mobileTab} ${settings.reducedMotion ? 'reduced-motion' : ''}`} style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+          {/* Header */}
+          <Header
+            session={session}
+            totalResults={totalResults}
+            settings={settings}
+            onOpenSettings={() => setIsSettingsOpen(true)}
+            onOpenExportImport={() => setIsExportImportOpen(true)}
+            onOpenClearConfirm={() => setIsClearConfirmOpen(true)}
+            onOpenMappingModal={() => setIsMappingOpen(true)}
+            onOpenHelpModal={() => setIsHelpOpen(true)}
+          />
+
+          {/* Main Content Area */}
+          <main style={{
+            flex: 1,
+            maxWidth: 1400,
+            width: '100%',
+            margin: '0 auto',
+            padding: '1.5rem 1.25rem 3rem 1.25rem',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '1.5rem',
+          }}>
         {/* Mobile View Mode Navigation Tabs (< 768px Viewports) */}
         <div className="mobile-tab-bar" role="tablist" aria-label="Mobile Navigation">
           <button
@@ -657,6 +747,8 @@ export function App() {
         isOpen={isHelpOpen}
         onClose={() => setIsHelpOpen(false)}
       />
+        </div>
+      )}
     </div>
   );
 }
