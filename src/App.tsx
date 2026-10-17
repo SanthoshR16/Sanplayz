@@ -63,7 +63,7 @@ export function App() {
   const [dismissedOfflineBanner, setDismissedOfflineBanner] = useState<boolean>(false);
   const [mobileTab, setMobileTab] = useState<'sureshot' | 'history' | 'analytics'>('sureshot');
   const [lastBetOutcome, setLastBetOutcome] = useState<BetOutcomeEvent | null>(null);
-  const [postLossCooldown, setPostLossCooldown] = useState<number>(0);
+  const [awaitingBestGap, setAwaitingBestGap] = useState<boolean>(false);
   const outcomeCounterRef = useRef<number>(1);
 
   // Modals
@@ -159,15 +159,12 @@ export function App() {
         amount: dynamicWager.amount,
       });
 
-      // Post-Loss Cooldown Guard: When a bet misses, enforce 2-spin observation cooldown!
+      // When a bet misses: Strictly require the next BEST GAP before issuing another Sureshot
       if (!won) {
-        setPostLossCooldown(2);
+        setAwaitingBestGap(true);
       } else {
-        setPostLossCooldown(0);
+        setAwaitingBestGap(false);
       }
-    } else if (postLossCooldown > 0) {
-      // Decrement observation spins as new spins are entered
-      setPostLossCooldown((prev) => Math.max(0, prev - 1));
     }
 
     const activeSession = session ?? (await ensureActiveSession());
@@ -206,7 +203,7 @@ export function App() {
   // CRITICAL REQUIREMENT: Previous table data is permanently preserved in IndexedDB
   // so the adaptive model continually learns and gets smarter from every single entered spin.
   const handleClearActiveResults = async () => {
-    setPostLossCooldown(0);
+    setAwaitingBestGap(false);
     await startNewTableSession();
     await refreshData();
   };
@@ -322,8 +319,8 @@ export function App() {
   }, [predictions, results]);
 
   const recommendations = useMemo(() => {
-    return generateRecommendations(results, allHistoricalResults, postLossCooldown);
-  }, [results, allHistoricalResults, postLossCooldown]);
+    return generateRecommendations(results, allHistoricalResults, awaitingBestGap);
+  }, [results, allHistoricalResults, awaitingBestGap]);
 
   if (isLoading) {
     return (

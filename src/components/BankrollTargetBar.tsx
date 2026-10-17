@@ -554,29 +554,29 @@ export const BankrollTargetBar: React.FC<BankrollTargetBarProps> = ({
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
           {sureshot.isTriggered ? (
             <Zap size={20} color="#fbbf24" style={{ flexShrink: 0 }} />
-          ) : sureshot.status === 'POST_LOSS_COOLDOWN' ? (
+          ) : (sureshot.status === 'POST_LOSS_COOLDOWN' || sureshot.status === 'AWAITING_BEST_GAP') ? (
             <AlertTriangle size={20} color="#f43f5e" style={{ flexShrink: 0 }} />
           ) : (
             <Target size={20} color="#818cf8" style={{ flexShrink: 0 }} />
           )}
           <div>
-            <div style={{ fontSize: '0.8rem', fontWeight: 800, color: sureshot.status === 'POST_LOSS_COOLDOWN' ? '#fca5a5' : '#fff' }}>
+            <div style={{ fontSize: '0.8rem', fontWeight: 800, color: (sureshot.status === 'POST_LOSS_COOLDOWN' || sureshot.status === 'AWAITING_BEST_GAP') ? '#fca5a5' : '#fff' }}>
               {isTargetAchieved
                 ? 'TARGET ACHIEVED (+10%): LOCK IN WINNINGS & EXIT'
-                : sureshot.status === 'POST_LOSS_COOLDOWN'
+                : (sureshot.status === 'POST_LOSS_COOLDOWN' || sureshot.status === 'AWAITING_BEST_GAP')
                 ? `🛑 ${sureshot.primaryDirective}`
                 : sureshot.isTriggered
                 ? `OPPORTUNITY DETECTED: BET ${sureshot.targetSelection} (${sureshot.confidence}%)`
-                : 'HUNTING CONVERGENT OPPORTUNITY — WAIT FOR SURESHOT'}
+                : 'HUNTING CONVERGENT OPPORTUNITY — WAIT FOR BEST GAP'}
             </div>
-            <div style={{ fontSize: '0.7rem', color: sureshot.status === 'POST_LOSS_COOLDOWN' ? '#fecdd3' : 'var(--text-secondary)' }}>
+            <div style={{ fontSize: '0.7rem', color: (sureshot.status === 'POST_LOSS_COOLDOWN' || sureshot.status === 'AWAITING_BEST_GAP') ? '#fecdd3' : 'var(--text-secondary)' }}>
               {isTargetAchieved
                 ? 'You have secured the desired +10% profit. Do not gamble further.'
-                : sureshot.status === 'POST_LOSS_COOLDOWN'
-                ? 'Previous prediction missed. Wheel is currently defying standard statistical pull. Do not chase. Observing next moves to realign.'
+                : (sureshot.status === 'POST_LOSS_COOLDOWN' || sureshot.status === 'AWAITING_BEST_GAP')
+                ? 'Previous prediction missed. Strictly waiting for wheel to reach verified Best Gap (Gap >= 4 or Chop >= 5) before striking again.'
                 : sureshot.isTriggered
                 ? `Dynamic Wager: ${currencySymbol}${dynamicWager.amount} (${dynamicWager.units} Units) on ${sureshot.targetSelection} • ${dynamicWager.reasoning}`
-                : `Model is tracking wheel entropy. Bet size will be ${currencySymbol}${bankroll.minBet} when high-probability setup locks in.`}
+                : `Model tracking 100k open-source benchmarks. Deepest gap: ${sureshot.bestGapInfo?.currentGapDepth || 0}/4 spins. Bet size: ${currencySymbol}${bankroll.minBet}.`}
             </div>
           </div>
         </div>

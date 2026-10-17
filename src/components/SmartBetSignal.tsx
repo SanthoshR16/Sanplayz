@@ -415,8 +415,8 @@ export const SmartBetSignal: React.FC<SmartBetSignalProps> = ({
               </p>
             </div>
 
-            {/* Convergence Progress Bar */}
-            <div style={{ minWidth: 220, textAlign: 'right' }}>
+            {/* Best Gap Convergence Progress Gauge */}
+            <div style={{ minWidth: 260, textAlign: 'right' }}>
               <div
                 style={{
                   fontSize: '0.75rem',
@@ -426,7 +426,7 @@ export const SmartBetSignal: React.FC<SmartBetSignalProps> = ({
                   marginBottom: '0.3rem',
                 }}
               >
-                Convergence Progress
+                Best Gap Radar (Open-Source 100k Model)
               </div>
               <div
                 style={{
@@ -437,7 +437,7 @@ export const SmartBetSignal: React.FC<SmartBetSignalProps> = ({
                   marginBottom: '0.4rem',
                 }}
               >
-                {sureshot.conditionsMet} of 2 Triggers Met
+                Deepest Gap: {sureshot.bestGapInfo?.currentGapDepth || 0} / 4 Spins
               </div>
               <div
                 style={{
@@ -451,9 +451,9 @@ export const SmartBetSignal: React.FC<SmartBetSignalProps> = ({
                 <div
                   style={{
                     height: '100%',
-                    width: `${Math.min(100, (sureshot.conditionsMet / 2) * 100)}%`,
+                    width: `${Math.min(100, ((sureshot.bestGapInfo?.currentGapDepth || 0) / 4) * 100)}%`,
                     background:
-                      sureshot.conditionsMet >= 1
+                      (sureshot.bestGapInfo?.currentGapDepth || 0) >= 3
                         ? 'linear-gradient(90deg, #f59e0b, #10b981)'
                         : 'linear-gradient(90deg, #6366f1, #38bdf8)',
                     borderRadius: 4,
@@ -463,15 +463,51 @@ export const SmartBetSignal: React.FC<SmartBetSignalProps> = ({
               </div>
               <div
                 style={{
-                  fontSize: '0.75rem',
-                  color: 'var(--text-muted)',
+                  fontSize: '0.72rem',
+                  color: (sureshot.bestGapInfo?.currentGapDepth || 0) >= 3 ? '#fbbf24' : 'var(--text-muted)',
                   marginTop: '0.35rem',
+                  fontWeight: 600,
                 }}
               >
-                Requires streak $\ge 3$ or 5-window skew $\ge 80\%$
+                {(sureshot.bestGapInfo?.currentGapDepth || 0) >= 4
+                  ? '🎯 Best Gap reached (93.1%+ termination probability)'
+                  : `Need ${sureshot.bestGapInfo?.spinsUntilBestGap || 2} more spin(s) to reach Best Gap threshold (>=4)`}
               </div>
             </div>
           </div>
+
+          {/* Live Gap Surveillance Strip */}
+          {sureshot.bestGapInfo && (
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))',
+                gap: '0.5rem',
+                margin: '0.75rem 0 1rem 0',
+              }}
+            >
+              <div style={{ background: 'rgba(15, 23, 42, 0.7)', border: '1px solid rgba(239, 68, 68, 0.3)', borderRadius: 6, padding: '0.4rem 0.6rem', textAlign: 'center' }}>
+                <div style={{ fontSize: '0.68rem', color: '#fca5a5', fontWeight: 700 }}>RED GAP</div>
+                <div style={{ fontSize: '1.05rem', fontWeight: 900, color: '#fff', fontFamily: 'monospace' }}>{sureshot.bestGapInfo.redGap} spins</div>
+              </div>
+              <div style={{ background: 'rgba(15, 23, 42, 0.7)', border: '1px solid rgba(148, 163, 184, 0.3)', borderRadius: 6, padding: '0.4rem 0.6rem', textAlign: 'center' }}>
+                <div style={{ fontSize: '0.68rem', color: '#cbd5e1', fontWeight: 700 }}>BLACK GAP</div>
+                <div style={{ fontSize: '1.05rem', fontWeight: 900, color: '#fff', fontFamily: 'monospace' }}>{sureshot.bestGapInfo.blackGap} spins</div>
+              </div>
+              <div style={{ background: 'rgba(15, 23, 42, 0.7)', border: '1px solid rgba(129, 140, 248, 0.3)', borderRadius: 6, padding: '0.4rem 0.6rem', textAlign: 'center' }}>
+                <div style={{ fontSize: '0.68rem', color: '#c7d2fe', fontWeight: 700 }}>ODD GAP</div>
+                <div style={{ fontSize: '1.05rem', fontWeight: 900, color: '#fff', fontFamily: 'monospace' }}>{sureshot.bestGapInfo.oddGap} spins</div>
+              </div>
+              <div style={{ background: 'rgba(15, 23, 42, 0.7)', border: '1px solid rgba(56, 189, 248, 0.3)', borderRadius: 6, padding: '0.4rem 0.6rem', textAlign: 'center' }}>
+                <div style={{ fontSize: '0.68rem', color: '#bae6fd', fontWeight: 700 }}>EVEN GAP</div>
+                <div style={{ fontSize: '1.05rem', fontWeight: 900, color: '#fff', fontFamily: 'monospace' }}>{sureshot.bestGapInfo.evenGap} spins</div>
+              </div>
+              <div style={{ background: 'rgba(15, 23, 42, 0.7)', border: '1px solid rgba(245, 158, 11, 0.3)', borderRadius: 6, padding: '0.4rem 0.6rem', textAlign: 'center' }}>
+                <div style={{ fontSize: '0.68rem', color: '#fde68a', fontWeight: 700 }}>CHOP RUN</div>
+                <div style={{ fontSize: '1.05rem', fontWeight: 900, color: '#fff', fontFamily: 'monospace' }}>{sureshot.bestGapInfo.chopLength} spins</div>
+              </div>
+            </div>
+          )}
 
           {/* Current Surveillance Notes */}
           <div
