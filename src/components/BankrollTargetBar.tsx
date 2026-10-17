@@ -16,6 +16,7 @@ import {
   loadBankrollFromStorage,
   saveBankrollToStorage,
 } from '../math/bankrollStorage';
+import { BettingStrategyGuide } from './BettingStrategyGuide';
 
 export interface BetOutcomeEvent {
   id: number;
@@ -551,20 +552,26 @@ export const BankrollTargetBar: React.FC<BankrollTargetBarProps> = ({
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
           {sureshot.isTriggered ? (
             <Zap size={20} color="#fbbf24" style={{ flexShrink: 0 }} />
+          ) : sureshot.status === 'POST_LOSS_COOLDOWN' ? (
+            <AlertTriangle size={20} color="#f43f5e" style={{ flexShrink: 0 }} />
           ) : (
             <Target size={20} color="#818cf8" style={{ flexShrink: 0 }} />
           )}
           <div>
-            <div style={{ fontSize: '0.8rem', fontWeight: 800, color: '#fff' }}>
+            <div style={{ fontSize: '0.8rem', fontWeight: 800, color: sureshot.status === 'POST_LOSS_COOLDOWN' ? '#fca5a5' : '#fff' }}>
               {isTargetAchieved
                 ? 'TARGET ACHIEVED (+10%): LOCK IN WINNINGS & EXIT'
+                : sureshot.status === 'POST_LOSS_COOLDOWN'
+                ? `🛑 ${sureshot.primaryDirective}`
                 : sureshot.isTriggered
                 ? `OPPORTUNITY DETECTED: BET ${sureshot.targetSelection} (${sureshot.confidence}%)`
                 : 'HUNTING CONVERGENT OPPORTUNITY — WAIT FOR SURESHOT'}
             </div>
-            <div style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>
+            <div style={{ fontSize: '0.7rem', color: sureshot.status === 'POST_LOSS_COOLDOWN' ? '#fecdd3' : 'var(--text-secondary)' }}>
               {isTargetAchieved
                 ? 'You have secured the desired +10% profit. Do not gamble further.'
+                : sureshot.status === 'POST_LOSS_COOLDOWN'
+                ? 'Previous prediction missed. Wheel is currently defying standard statistical pull. Do not chase. Observing next moves to realign.'
                 : sureshot.isTriggered
                 ? `Recommended Wager: ${currencySymbol}${(bankroll.minBet * (sureshot.recommendedUnits || 1)).toFixed(0)} (${sureshot.recommendedUnits || 1} Unit) on ${sureshot.targetSelection}`
                 : `Model is tracking wheel entropy. Bet size will be ${currencySymbol}${bankroll.minBet} when high-probability setup locks in.`}
@@ -604,6 +611,14 @@ export const BankrollTargetBar: React.FC<BankrollTargetBarProps> = ({
           </button>
         </div>
       </div>
+
+      {/* Gambler's Strategy & Backup Advisory */}
+      <BettingStrategyGuide
+        startingCapital={bankroll.startingCapital}
+        minBet={bankroll.minBet}
+        currentBalance={bankroll.currentBalance}
+        currencySymbol={currencySymbol}
+      />
     </div>
   );
 };

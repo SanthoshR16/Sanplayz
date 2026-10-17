@@ -62,6 +62,7 @@ export function App() {
   const [dismissedOfflineBanner, setDismissedOfflineBanner] = useState<boolean>(false);
   const [mobileTab, setMobileTab] = useState<'sureshot' | 'history' | 'analytics'>('sureshot');
   const [lastBetOutcome, setLastBetOutcome] = useState<BetOutcomeEvent | null>(null);
+  const [postLossCooldown, setPostLossCooldown] = useState<number>(0);
   const outcomeCounterRef = useRef<number>(1);
 
   // Modals
@@ -152,6 +153,16 @@ export function App() {
         selection: target,
         numberLanded: num,
       });
+
+      // Post-Loss Cooldown Guard: When a bet misses, enforce 2-spin observation cooldown!
+      if (!won) {
+        setPostLossCooldown(2);
+      } else {
+        setPostLossCooldown(0);
+      }
+    } else if (postLossCooldown > 0) {
+      // Decrement observation spins as new spins are entered
+      setPostLossCooldown((prev) => Math.max(0, prev - 1));
     }
 
     const activeSession = session ?? (await ensureActiveSession());
@@ -190,6 +201,7 @@ export function App() {
   // CRITICAL REQUIREMENT: Previous table data is permanently preserved in IndexedDB
   // so the adaptive model continually learns and gets smarter from every single entered spin.
   const handleClearActiveResults = async () => {
+    setPostLossCooldown(0);
     await startNewTableSession();
     await refreshData();
   };
@@ -305,8 +317,8 @@ export function App() {
   }, [predictions, results]);
 
   const recommendations = useMemo(() => {
-    return generateRecommendations(results, allHistoricalResults);
-  }, [results, allHistoricalResults]);
+    return generateRecommendations(results, allHistoricalResults, postLossCooldown);
+  }, [results, allHistoricalResults, postLossCooldown]);
 
   if (isLoading) {
     return (

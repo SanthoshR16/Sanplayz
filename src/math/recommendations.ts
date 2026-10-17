@@ -6,11 +6,11 @@ import { calculateTransitions, getTransitionProbabilities } from './transitions'
 
 export interface SureshotSignal {
   isTriggered: boolean;
-  status: 'SURESHOT_ACTIVE' | 'WAITING_FOR_TRIGGER';
+  status: 'SURESHOT_ACTIVE' | 'WAITING_FOR_TRIGGER' | 'POST_LOSS_COOLDOWN';
   focusType: 'COLOR' | 'PARITY' | 'NONE'; // strictly ONE focus: either Color OR Parity, not both
   targetSelection: string; // e.g. "RED", "BLACK", "ODD", "EVEN"
   confidence: number; // 80%–94% when triggered, lower when waiting
-  confidenceLabel: 'ULTRA-CONFIDENT (SURESHOT)' | 'HIGH EDGE' | 'GATHERING SIGNALS (WAIT)' | 'CALCULATING';
+  confidenceLabel: 'ULTRA-CONFIDENT (SURESHOT)' | 'HIGH EDGE' | 'GATHERING SIGNALS (WAIT)' | 'POST-LOSS OBSERVATION (DO NOT BET)' | 'CALCULATING';
   conditionsMet: number;
   conditionsTotal: number;
   triggerFactors: string[];
@@ -70,7 +70,8 @@ export interface BetRecommendation {
  */
 export function generateRecommendations(
   results: RouletteResult[],
-  allHistoricalResults?: RouletteResult[]
+  allHistoricalResults?: RouletteResult[],
+  postLossCooldownSpins: number = 0
 ): BetRecommendation {
   const theo = getTheoreticalDistribution();
   const total = results.length;
@@ -86,6 +87,64 @@ export function generateRecommendations(
     historicalSureshotRate: historicalPerformance.winRate,
     adaptationStatus: lifetimeResults.length >= 10 ? 'Model Trained & Actively Adapting' : 'Gathering Baseline Data',
   };
+
+  // If in Post-Loss Cooldown observation mode, strictly enforce PAUSE and DO NOT BET
+  if (postLossCooldownSpins > 0) {
+    const sureshot: SureshotSignal = {
+      isTriggered: false,
+      status: 'POST_LOSS_COOLDOWN',
+      focusType: 'NONE',
+      targetSelection: 'WAIT',
+      confidence: 50,
+      confidenceLabel: 'POST-LOSS OBSERVATION (DO NOT BET)',
+      conditionsMet: 0,
+      conditionsTotal: 4,
+      triggerFactors: [
+        'Previous Sureshot prediction missed. Wheel is currently exhibiting adverse variance or regime transition.',
+        'Disciplined Gambler Rule: NEVER double down or chase into an unconfirmed trend.',
+        `Pausing for ${postLossCooldownSpins} spin(s) to observe wheel realignment and determine true statistical direction.`,
+        'Model will automatically resume high-probability Sureshot when clean convergence returns.',
+      ],
+      primaryDirective: `POST-LOSS PAUSE: OBSERVE NEXT ${postLossCooldownSpins} MOVE(S) — DO NOT BET`,
+      recommendedUnits: 0,
+      payout: '1:1',
+      historicalPerformance,
+    };
+
+    return {
+      sureshot,
+      primaryBet: {
+        action: 'PAUSE — OBSERVING WHEEL REALIGNMENT',
+        selection: 'NONE',
+        confidence: 50,
+        confidenceLabel: 'POST-LOSS OBSERVATION (DO NOT BET)',
+        payoutRatio: '1:1',
+        reasoning: `Post-loss observation pause active (${postLossCooldownSpins} spin(s) remaining). Awaiting genuine statistical setup.`,
+      },
+      colorAdvice: {
+        pick: 'red',
+        confidence: 50,
+        isActionable: false,
+        actionText: 'PAUSED (Cooldown Active)',
+        reason: 'Post-loss observation pause in progress.',
+      },
+      parityAdvice: {
+        pick: 'odd',
+        confidence: 50,
+        isActionable: false,
+        actionText: 'PAUSED (Cooldown Active)',
+        reason: 'Post-loss observation pause in progress.',
+      },
+      sectorAdvice: {
+        joint: 'red-odd',
+        name: 'Red & Odd',
+        winProb: theo.pJoint['red-odd'],
+        payout: '2.6:1',
+        reason: 'Wheel is in post-loss calibration mode.',
+      },
+      globalTrainingStats,
+    };
+  }
 
   // If no results on active table, wait state
   if (total === 0) {
@@ -202,26 +261,18 @@ export function generateRecommendations(
   const cStreak = streaks.currentColorStreak.length;
   const cColor = streaks.currentColorStreak.color;
 
-  // 1. Streak exhaustion test (2 points for >=3 streak, 1 point for =2 streak)
+  // 1. Streak exhaustion test (2 points for >=3 streak)
   if (cColor === 'black') {
     if (cStreak >= 3) {
       colorScore += 2;
       colorTarget = 'red';
       colorFactors.push(`${cStreak}× consecutive Black streak. Reversal probability to Red is high.`);
-    } else if (cStreak === 2) {
-      colorScore += 1;
-      colorTarget = 'red';
-      colorFactors.push(`2× consecutive Black streak detected. Watching for 3rd spin reversal.`);
     }
   } else if (cColor === 'red') {
     if (cStreak >= 3) {
       colorScore += 2;
       colorTarget = 'black';
       colorFactors.push(`${cStreak}× consecutive Red streak. Reversal probability to Black is high.`);
-    } else if (cStreak === 2) {
-      colorScore += 1;
-      colorTarget = 'black';
-      colorFactors.push(`2× consecutive Red streak detected. Watching for 3rd spin reversal.`);
     }
   }
 
@@ -283,26 +334,18 @@ export function generateRecommendations(
   const pStreak = streaks.currentParityStreak.length;
   const pParity = streaks.currentParityStreak.parity;
 
-  // 1. Streak exhaustion test (2 points for >=3 streak, 1 point for =2 streak)
+  // 1. Streak exhaustion test (2 points for >=3 streak)
   if (pParity === 'even') {
     if (pStreak >= 3) {
       parityScore += 2;
       parityTarget = 'odd';
       parityFactors.push(`${pStreak}× consecutive Even streak. Reversal probability to Odd is high.`);
-    } else if (pStreak === 2) {
-      parityScore += 1;
-      parityTarget = 'odd';
-      parityFactors.push(`2× consecutive Even streak detected. Watching for 3rd spin reversal.`);
     }
   } else if (pParity === 'odd') {
     if (pStreak >= 3) {
       parityScore += 2;
       parityTarget = 'even';
       parityFactors.push(`${pStreak}× consecutive Odd streak. Reversal probability to Even is high.`);
-    } else if (pStreak === 2) {
-      parityScore += 1;
-      parityTarget = 'even';
-      parityFactors.push(`2× consecutive Odd streak detected. Watching for 3rd spin reversal.`);
     }
   }
 
