@@ -1,9 +1,10 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { Header } from './components/Header';
 import { SlidingHistory } from './components/SlidingHistory';
 import { ResultEntry } from './components/ResultEntry';
 import { SessionProgress } from './components/SessionProgress';
 import { SmartBetSignal } from './components/SmartBetSignal';
+import { BankrollTargetBar, type BetOutcomeEvent } from './components/BankrollTargetBar';
 import { SimpleSummaryBar } from './components/SimpleSummaryBar';
 import { StatisticalAssessment } from './components/StatisticalAssessment';
 import { RollingStatsPanel } from './components/RollingStatsPanel';
@@ -39,6 +40,7 @@ import {
   undoLastResult,
   updateResult,
 } from './db/storage';
+import { classifyNumber } from './math/mapping';
 import { computeAllRollingWindows, computeRollingStats } from './math/rolling';
 import { calculateStreaks } from './math/streaks';
 import { calculateTransitions } from './math/transitions';
@@ -59,6 +61,8 @@ export function App() {
   const [showAdvancedMath, setShowAdvancedMath] = useState<boolean>(false);
   const [dismissedOfflineBanner, setDismissedOfflineBanner] = useState<boolean>(false);
   const [mobileTab, setMobileTab] = useState<'sureshot' | 'history' | 'analytics'>('sureshot');
+  const [lastBetOutcome, setLastBetOutcome] = useState<BetOutcomeEvent | null>(null);
+  const outcomeCounterRef = useRef<number>(1);
 
   // Modals
   const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(false);
@@ -129,6 +133,27 @@ export function App() {
 
   // Add Result
   const handleAddResult = async (num: number, note?: string) => {
+    // If sureshot was triggered prior to this spin, automatically evaluate outcome
+    if (recommendations.sureshot.isTriggered) {
+      const target = recommendations.sureshot.targetSelection;
+      const c = classifyNumber(num);
+      let won = false;
+      if (num !== 0) {
+        if (target === 'RED' && c.color === 'red') won = true;
+        else if (target === 'BLACK' && c.color === 'black') won = true;
+        else if (target === 'ODD' && c.parity === 'odd') won = true;
+        else if (target === 'EVEN' && c.parity === 'even') won = true;
+        else if (target === '1-18 (LOW)' && c.half === 'low') won = true;
+        else if (target === '19-36 (HIGH)' && c.half === 'high') won = true;
+      }
+      setLastBetOutcome({
+        id: outcomeCounterRef.current++,
+        won,
+        selection: target,
+        numberLanded: num,
+      });
+    }
+
     const activeSession = session ?? (await ensureActiveSession());
     setSession(activeSession);
     await addRouletteResult(num, activeSession.id, note);
@@ -443,6 +468,15 @@ export function App() {
               minWindow={minWindow}
             />
           </div>
+        </div>
+
+        {/* 💰 Gambler's Bankroll & +10% Profit Target Bar */}
+        <div className="tab-history-hide tab-analytics-hide">
+          <BankrollTargetBar
+            sureshot={recommendations.sureshot}
+            lastOutcome={lastBetOutcome}
+            currencySymbol="₹"
+          />
         </div>
 
         {/* 🎯 SMART BET SIGNAL HERO: What to Bet On (Clean, Simple, Fast) */}
