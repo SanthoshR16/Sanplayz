@@ -15,14 +15,15 @@ import {
   type BankrollState,
   loadBankrollFromStorage,
   saveBankrollToStorage,
+  calculateDynamicWager,
 } from '../math/bankrollStorage';
-import { BettingStrategyGuide } from './BettingStrategyGuide';
 
 export interface BetOutcomeEvent {
   id: number;
   won: boolean;
   selection: string;
   numberLanded: number;
+  amount: number;
 }
 
 interface BankrollTargetBarProps {
@@ -50,7 +51,7 @@ export const BankrollTargetBar: React.FC<BankrollTargetBarProps> = ({
   // Auto-settle bet when a new outcome is provided from a sureshot trigger
   useEffect(() => {
     if (!lastOutcome) return;
-    const betAmount = bankroll.minBet;
+    const betAmount = lastOutcome.amount || bankroll.minBet;
     setBankroll((prev) => ({
       ...prev,
       currentBalance: lastOutcome.won
@@ -84,6 +85,7 @@ export const BankrollTargetBar: React.FC<BankrollTargetBarProps> = ({
     ? (profitAmount / bankroll.startingCapital) * 100
     : 0;
   const isTargetAchieved = profitAmount >= targetProfitAmount;
+  const dynamicWager = calculateDynamicWager(bankroll, sureshot.confidence, sureshot.isTriggered);
 
   // Progress percentage (0% to 100%)
   const progressRatio = Math.max(0, Math.min(100, (profitAmount / targetProfitAmount) * 100));
@@ -573,7 +575,7 @@ export const BankrollTargetBar: React.FC<BankrollTargetBarProps> = ({
                 : sureshot.status === 'POST_LOSS_COOLDOWN'
                 ? 'Previous prediction missed. Wheel is currently defying standard statistical pull. Do not chase. Observing next moves to realign.'
                 : sureshot.isTriggered
-                ? `Recommended Wager: ${currencySymbol}${(bankroll.minBet * (sureshot.recommendedUnits || 1)).toFixed(0)} (${sureshot.recommendedUnits || 1} Unit) on ${sureshot.targetSelection}`
+                ? `Dynamic Wager: ${currencySymbol}${dynamicWager.amount} (${dynamicWager.units} Units) on ${sureshot.targetSelection} • ${dynamicWager.reasoning}`
                 : `Model is tracking wheel entropy. Bet size will be ${currencySymbol}${bankroll.minBet} when high-probability setup locks in.`}
             </div>
           </div>
@@ -582,7 +584,7 @@ export const BankrollTargetBar: React.FC<BankrollTargetBarProps> = ({
         {/* Quick Log Buttons */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
           <button
-            onClick={() => handleManualWin(bankroll.minBet)}
+            onClick={() => handleManualWin(dynamicWager.amount || bankroll.minBet)}
             className="btn-primary"
             style={{
               fontSize: '0.75rem',
@@ -593,10 +595,10 @@ export const BankrollTargetBar: React.FC<BankrollTargetBarProps> = ({
             title="Log a winning bet"
           >
             <Plus size={14} style={{ marginRight: 2 }} />
-            Won +{currencySymbol}{bankroll.minBet}
+            Won +{currencySymbol}{dynamicWager.amount || bankroll.minBet}
           </button>
           <button
-            onClick={() => handleManualLoss(bankroll.minBet)}
+            onClick={() => handleManualLoss(dynamicWager.amount || bankroll.minBet)}
             className="btn-secondary"
             style={{
               fontSize: '0.75rem',
@@ -607,18 +609,60 @@ export const BankrollTargetBar: React.FC<BankrollTargetBarProps> = ({
             title="Log a losing bet"
           >
             <Minus size={14} style={{ marginRight: 2 }} />
-            Lost -{currencySymbol}{bankroll.minBet}
+            Lost -{currencySymbol}{dynamicWager.amount || bankroll.minBet}
           </button>
         </div>
       </div>
 
-      {/* Gambler's Strategy & Backup Advisory */}
-      <BettingStrategyGuide
-        startingCapital={bankroll.startingCapital}
-        minBet={bankroll.minBet}
-        currentBalance={bankroll.currentBalance}
-        currencySymbol={currencySymbol}
-      />
+      {/* 🎯 High-Visibility Recommended Wager Card */}
+      {sureshot.isTriggered && (
+        <div
+          style={{
+            marginTop: '0.85rem',
+            padding: '0.85rem 1.15rem',
+            background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.18) 0%, rgba(225, 29, 72, 0.18) 100%)',
+            border: '2px solid rgba(245, 158, 11, 0.65)',
+            borderRadius: 'var(--radius-sm)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            flexWrap: 'wrap',
+            gap: '0.75rem',
+            boxShadow: '0 4px 20px rgba(245, 158, 11, 0.25)',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <div
+              style={{
+                background: 'linear-gradient(135deg, #f59e0b 0%, #e11d48 100%)',
+                color: '#fff',
+                fontWeight: 900,
+                fontSize: '1.35rem',
+                padding: '0.45rem 1rem',
+                borderRadius: 8,
+                fontFamily: 'monospace',
+                letterSpacing: '0.02em',
+                boxShadow: '0 2px 10px rgba(245, 158, 11, 0.4)',
+              }}
+            >
+              {currencySymbol}{dynamicWager.amount}
+            </div>
+            <div>
+              <div style={{ fontSize: '0.95rem', fontWeight: 900, color: '#fff', textTransform: 'uppercase' }}>
+                RECOMMENDED BET: {currencySymbol}{dynamicWager.amount} ON {sureshot.targetSelection}
+              </div>
+              <div style={{ fontSize: '0.76rem', color: '#fde68a', fontWeight: 600 }}>
+                {dynamicWager.reasoning}
+              </div>
+            </div>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <span style={{ fontSize: '0.75rem', background: 'rgba(0,0,0,0.35)', padding: '0.35rem 0.65rem', borderRadius: 6, color: '#fef08a', fontWeight: 700 }}>
+              Remaining to +10%: {currencySymbol}{Math.max(0, targetProfitAmount - profitAmount).toFixed(0)}
+            </span>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

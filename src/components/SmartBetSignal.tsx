@@ -11,6 +11,7 @@ import {
   Sparkles,
 } from 'lucide-react';
 import type { BetRecommendation } from '../math/recommendations';
+import { calculateDynamicWager, loadBankrollFromStorage } from '../math/bankrollStorage';
 
 interface SmartBetSignalProps {
   recommendation: BetRecommendation;
@@ -25,6 +26,10 @@ export const SmartBetSignal: React.FC<SmartBetSignalProps> = ({
   const isTriggered = sureshot.isTriggered;
   const isColorFocus = sureshot.focusType === 'COLOR';
   const isParityFocus = sureshot.focusType === 'PARITY';
+
+  // Load live bankroll state to dynamically calculate the smart wager
+  const bankroll = loadBankrollFromStorage();
+  const dynamicWager = calculateDynamicWager(bankroll, sureshot.confidence, isTriggered);
 
   // Determine styling theme based on the target selection
   const isRed = sureshot.targetSelection === 'RED';
@@ -239,6 +244,29 @@ export const SmartBetSignal: React.FC<SmartBetSignalProps> = ({
               >
                 {sureshot.primaryDirective}
               </div>
+
+              {/* Exact Recommended Wager Badge */}
+              <div
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.6rem',
+                  background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                  color: '#ffffff',
+                  padding: '0.45rem 1rem',
+                  borderRadius: 8,
+                  fontWeight: 900,
+                  fontSize: '1.18rem',
+                  fontFamily: 'monospace',
+                  marginTop: '0.5rem',
+                  boxShadow: '0 4px 15px rgba(16, 185, 129, 0.4)',
+                }}
+              >
+                <span>🎯 PLACE BET: ₹{dynamicWager.amount} ON {sureshot.targetSelection}</span>
+              </div>
+              <div style={{ fontSize: '0.78rem', color: '#fde68a', marginTop: '0.35rem', fontWeight: 600 }}>
+                {dynamicWager.reasoning}
+              </div>
             </div>
 
             {/* Confidence & Staking Badge */}
@@ -263,13 +291,14 @@ export const SmartBetSignal: React.FC<SmartBetSignalProps> = ({
               </div>
               <div
                 style={{
-                  fontSize: '0.8rem',
-                  color: 'var(--text-secondary)',
+                  fontSize: '0.85rem',
+                  color: '#fbbf24',
                   marginTop: '0.4rem',
+                  fontWeight: 700,
                 }}
               >
-                Recommended Bet:{' '}
-                <strong style={{ color: '#6ee7b7' }}>{sureshot.recommendedUnits} Units</strong> • Payout:{' '}
+                Calculated Stake:{' '}
+                <strong style={{ color: '#6ee7b7', fontFamily: 'monospace', fontSize: '1rem' }}>₹{dynamicWager.amount}</strong> ({dynamicWager.units} Units) • Payout:{' '}
                 <strong style={{ color: '#fff' }}>{sureshot.payout}</strong>
               </div>
             </div>

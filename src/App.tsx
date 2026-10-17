@@ -48,6 +48,7 @@ import { calculateBayesianEstimate } from './math/bayesian';
 import { calculateChiSquareTest, calculateRunsTest } from './math/randomness';
 import { evaluatePredictions } from './math/adaptive';
 import { generateRecommendations } from './math/recommendations';
+import { calculateDynamicWager, loadBankrollFromStorage } from './math/bankrollStorage';
 import { BarChart3, ChevronDown, ChevronUp, Cpu, History, Sparkles, Zap } from 'lucide-react';
 import type { PredictionRecord, RouletteResult, Session, UserSettings } from './types/roulette';
 
@@ -147,11 +148,15 @@ export function App() {
         else if (target === '1-18 (LOW)' && c.half === 'low') won = true;
         else if (target === '19-36 (HIGH)' && c.half === 'high') won = true;
       }
+      const currentBankroll = loadBankrollFromStorage();
+      const dynamicWager = calculateDynamicWager(currentBankroll, recommendations.sureshot.confidence, true);
+
       setLastBetOutcome({
         id: outcomeCounterRef.current++,
         won,
         selection: target,
         numberLanded: num,
+        amount: dynamicWager.amount,
       });
 
       // Post-Loss Cooldown Guard: When a bet misses, enforce 2-spin observation cooldown!
